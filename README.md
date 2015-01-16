@@ -12,7 +12,7 @@ Run the following command (may need to use sudo depending on your system).
 
 Open the _config.cfg_ file and edit the teams property for your particular rink (comma separated, as they appear on the stat page)
 
-# Running
+## Running
 
 You'll need to obtain client credentials for the app -- [follow the instructions provided by Google](https://developers.google.com/api-client-library/python/auth/installed-app#creatingcred)
 and put the credentials (renamed to client_secret.json) in the root of the project
@@ -23,3 +23,9 @@ Then just run
 The first run will prompt you for authorization to your google account and ask which calendar you'd like to sync the
 events to.  Every run afterwards will use the stored credentials and settings to run without intervention (making it
 usable for cron jobs)
+
+## To do:
+
+- Refactor a bit to make it more readable.  Also pull the schedule connectors away from the rest of the code it make it easier to...
+- Add a connector the NCWHL schedule
+- Add a connector for Ice Oasis' Google Calendar
