@@ -32,24 +32,6 @@ class Game:
 
         self.event_id = event_id
 
-    def getDateTime(self):
-        return self.date
-
-    def getRink(self):
-        return self.rink
-
-    def getAway(self):
-        return self.away
-
-    def getHome(self):
-        return self.home
-
-    def set_event_id(self, event):
-        self.event_id = event
-
-    def get_event_id(self):
-        return self.event_id
-
     def __str__(self):
         return 'Game %s at %s - %s. %s @ %s' % \
                (self.gameid,
@@ -57,8 +39,8 @@ class Game:
                 self.rink, self.away, self.home)
 
     def __eq__(self, other):
-        return self.gameid == other.gameid and self.date == other.date and self.rink == other.rink \
-               and self.away == other.away and self.home == other.home
+        return (self.gameid == other.gameid and self.date == other.date and self.rink == other.rink and
+                self.away == other.away and self.home == other.home)
 
     def __ne__(self, other):
         return not __eq__(self, other)
@@ -156,11 +138,12 @@ class CalendarManager:
         return calendars
 
     def sync(self, games, calendar_name):
-        # perform sync here
+        if len(games) == 0:
+            return
 
         # Sort the games by date so we can query for games on a range from today to the end of the listed game
         games = sorted(games, key=lambda g: g.date.timetuple())
-        last_game_datetime = games[len(games) - 1].getDateTime()
+        last_game_datetime = games[len(games) - 1].date
         last_game = (last_game_datetime + timedelta(days=5))
         today = datetime.now()  # TypeError: argument must be 9-item sequence, not float
 
@@ -177,20 +160,18 @@ class CalendarManager:
                     current_game = current_games[game.gameid]
                     if current_game == game:
                         print 'Passing on game', game.gameid, '(Already exists)'
-                        # print '\t',game
                         pass
                     else:
                         # Update the calendar entry
                         print 'Updating game', game.gameid
-                        self._updateGame(current_game, game, calendar_name)
-                    # print '\t',game
+                        self.__update_game(current_game, game, calendar_name)
 
                     # Remove the game from the dictionary so we can check for unprocessed games
                     del current_games[game.gameid]
                 else:
                     # Add game to the calendar
                     print 'Adding game', game.gameid
-                    self._createGame(game, calendar_name)
+                    self.__create_game(game, calendar_name)
                     # print '\t',game
             else:
                 # ignore game and delete from the dictionary
@@ -201,9 +182,7 @@ class CalendarManager:
         for game_id, game in current_games.iteritems():
             # Delete the game from the calendar
             print 'Deleting game', game.gameid
-            self._deleteGame(game, calendar_name)
-        # print '\t',game
-        return None
+            self.__delete_game(game, calendar_name)
 
     def date_range_search(self, cal, start, end, text='Game#'):
         current_games = dict()
@@ -241,11 +220,11 @@ class CalendarManager:
 
         return current_games
 
-    def _createGame(self, game, cal):
+    def __create_game(self, game, cal):
         title_text = game.away + ' @ ' + game.home
         content_text = 'Game#' + game.gameid
-        start_time = convert_date_time(game.getDateTime())
-        end_time = convert_date_time(game.getDateTime() + timedelta(hours=1, minutes=15))
+        start_time = convert_date_time(game.date)
+        end_time = convert_date_time(game.date + timedelta(hours=1, minutes=15))
 
         event = {
             'summary': title_text,
@@ -267,14 +246,13 @@ class CalendarManager:
 
         return created_event
 
-    def _updateGame(self, existing_game, new_game, cal):
+    def __update_game(self, existing_game, new_game, cal):
         print 'Update game', existing_game
-        self._deleteGame(existing_game, cal)
-        self._createGame(new_game, cal)
+        self.__delete_game(existing_game, cal)
+        self.__create_game(new_game, cal)
 
-
-    def _deleteGame(self, game, cal):
-        self.service.events().delete(calendarId=cal, eventId=game.get_event_id()['id']).execute()
+    def __delete_game(self, game, cal):
+        self.service.events().delete(calendarId=cal, eventId=game.event_id['id']).execute()
 
 
 def main():
@@ -298,48 +276,44 @@ def main():
     if len(fremonticeteams) > 0:
         games.extend(ripper.ripSharksIceMainSchedule(fremonticeurl, fremonticeteams.split(',')))
 
-    for game in sorted(games, key=lambda game: game.date):
+    for game in sorted(games, key=lambda g: g.date):
         print game
 
-    try:
-        flow = flow_from_clientsecrets('client_secret.json',
-                                       scope='https://www.googleapis.com/auth/calendar',
-                                       redirect_uri='urn:ietf:wg:oauth:2.0:oob')
-        storage = Storage('credentials.dat')
-        credentials = storage.get()
-        if credentials is None or credentials.invalid:
-            parser = argparse.ArgumentParser(parents=[tools.argparser])
-            flags = parser.parse_args()
-            credentials = tools.run_flow(flow, storage, flags)
+    flow = flow_from_clientsecrets(config.get('General', 'secrets_location'),
+                                   scope='https://www.googleapis.com/auth/calendar',
+                                   redirect_uri='urn:ietf:wg:oauth:2.0:oob')
+    storage = Storage('credentials.dat')
+    credentials = storage.get()
+    if credentials is None or credentials.invalid:
+        parser = argparse.ArgumentParser(parents=[tools.argparser])
+        flags = parser.parse_args()
+        credentials = tools.run_flow(flow, storage, flags)
 
-        http = httplib2.Http()
-        http = credentials.authorize(http)
+    http = httplib2.Http()
+    http = credentials.authorize(http)
 
-        service = discovery.build(serviceName='calendar', version='v3', http=http, developerKey='')
-        manager = CalendarManager(service)
+    service = discovery.build(serviceName='calendar', version='v3', http=http, developerKey='')
+    manager = CalendarManager(service)
 
-        cal = config.get('Google Calendar', 'calendarid')
-        if len(cal) == 0:
-            print 'A calendar must be specified:'
-            cals = manager.get_calendars()
-            for i in range(len(cals)):
-                print (i + 1), ': ', cals[i]['summary']
-            while len(cal) == 0:
-                temp = input('Select calendar to import events to: ')
-                try:
-                    temp = int(temp) - 1
-                    if 0 <= temp < len(cals):
-                        cal = cals[temp]['id']
-                        config.set('Google Calendar', 'calendarid', cal)
-                        with open(config_file, 'wb') as configfile:
-                            config.write(configfile)
-                except ValueError:
-                    print 'Invalid selection'
+    cal = config.get('Google Calendar', 'calendarid')
+    if len(cal) == 0:
+        print 'A calendar must be specified:'
+        cals = manager.get_calendars()
+        for i in range(len(cals)):
+            print (i + 1), ': ', cals[i]['summary']
+        while len(cal) == 0:
+            temp = input('Select calendar to import events to: ')
+            try:
+                temp = int(temp) - 1
+                if 0 <= temp < len(cals):
+                    cal = cals[temp]['id']
+                    config.set('Google Calendar', 'calendarid', cal)
+                    with open(config_file, 'wb') as configfile:
+                        config.write(configfile)
+            except ValueError:
+                print 'Invalid selection'
 
-        manager.sync(games, cal)
-    finally:
-        print 'wat'
-
+    manager.sync(games, cal)
 
 if __name__ == '__main__':
     main()
