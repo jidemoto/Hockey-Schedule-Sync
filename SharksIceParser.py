@@ -1,0 +1,79 @@
+from datetime import datetime
+import re
+import urllib
+from BeautifulSoup import BeautifulSoup
+import pytz
+from tzlocal import get_localzone
+import BeautifulSoup as bs
+
+utc = pytz.utc
+local_tz = get_localzone()
+
+
+def parse_main_schedule(page, teams):
+    raw = urllib.urlopen(page)
+    doc = BeautifulSoup(raw.read())
+
+    context = page[:page.rfind('/')]
+
+    games = []
+
+    for team in teams:
+        anchor = doc.find('a', text=re.compile(team)).parent['href']
+        print team, 'page:', anchor
+        games.extend(__parse_team_schedule(context + '/' + anchor))
+
+    return games
+
+
+def __parse_team_schedule(anchor):
+    from ScheduleRipper import Game
+
+    games = []
+    current_year = str(datetime.now().year)
+    roll_year = False
+
+    raw = urllib.urlopen(anchor)
+    doc = BeautifulSoup(raw.read())
+
+    game_rows = doc.find('table').findAll('tr')[2:]
+    for game in game_rows:
+        info = game.findAll('td')
+        if len(info) > 0:
+            # print info[0]
+            game_num = info[0].contents[0]
+            if type(game_num) == bs.Tag and game_num.name == 'a':
+                game_num = game_num.contents[0]
+
+            starpos = game_num.find('*')
+            if starpos >= 0:
+                continue  # This will skip the processing of games that have already occured
+            # gameNum = gameNum[:starpos]
+
+            home_team = ''.join([__get_text_content(x) for x in info[8].contents]).replace('&nbsp;', '').strip()
+            away_team = ''.join([__get_text_content(x) for x in info[6].contents]).replace('&nbsp;', '').strip()
+
+            # This date is going to be set to 1900
+            d = datetime.strptime(
+                info[1].contents[0].replace('&nbsp;', '').strip() + ' ' + current_year + ' ' + info[2].contents[
+                    0].replace('&nbsp;', '').strip(), '%a %b %d %Y %I:%M %p')
+            if not roll_year and d.month == 1 and datetime.now().month > 6:
+                roll_year = True
+
+            if roll_year:
+                d = d.replace(year=d.year + 1)
+
+            d = local_tz.localize(d).astimezone(utc)
+            games.append(Game(game_num, d, info[3].contents[0].replace('&nbsp;', '').strip(), away_team, home_team))
+
+    return games
+
+
+def __get_text_content(soupnode):
+    if len(soupnode) > 1:
+        return ''.join([__get_text_content(child) for child in soupnode])
+    else:
+        if type(soupnode) == bs.Tag:
+            return ''.join([__get_text_content(content) for content in soupnode.contents])
+        else:
+            return soupnode

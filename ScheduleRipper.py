@@ -1,12 +1,7 @@
 import ConfigParser
-import urllib
-import re
 import time
 from datetime import datetime
 from datetime import timedelta
-
-import BeautifulSoup as bs
-from BeautifulSoup import BeautifulSoup
 
 from oauth2client.file import Storage
 from oauth2client import tools
@@ -17,6 +12,8 @@ import httplib2
 from apiclient import discovery
 import pytz
 from tzlocal import get_localzone
+import NcwhlParser
+import SharksIceParser
 
 utc = pytz.utc
 local_tz = get_localzone()
@@ -44,73 +41,6 @@ class Game:
 
     def __ne__(self, other):
         return not __eq__(self, other)
-
-
-class ScheduleRipper:
-    def ripSharksIceMainSchedule(self, page, teams):
-        raw = urllib.urlopen(page)
-        doc = BeautifulSoup(raw.read())
-
-        context = page[:page.rfind('/')]
-
-        games = []
-
-        for team in teams:
-            anchor = doc.find('a', text=re.compile(team)).parent['href']
-            print team, 'page:', anchor
-            games.extend(self.ripSharksIceTeamSchedule(context + '/' + anchor))
-
-        return games
-
-    def ripSharksIceTeamSchedule(self, anchor):
-
-        games = []
-        current_year = str(datetime.now().year)
-        roll_year = False
-
-        raw = urllib.urlopen(anchor)
-        doc = BeautifulSoup(raw.read())
-
-        game_rows = doc.find('table').findAll('tr')[2:]
-        for game in game_rows:
-            info = game.findAll('td')
-            if len(info) > 0:
-                # print info[0]
-                game_num = info[0].contents[0]
-                if type(game_num) == bs.Tag and game_num.name == 'a':
-                    game_num = game_num.contents[0]
-
-                starpos = game_num.find('*')
-                if starpos >= 0:
-                    continue  # This will skip the processing of games that have already occured
-                # gameNum = gameNum[:starpos]
-
-                home_team = ''.join([self._get_text_content(x) for x in info[8].contents]).replace('&nbsp;', '').strip()
-                away_team = ''.join([self._get_text_content(x) for x in info[6].contents]).replace('&nbsp;', '').strip()
-
-                # This date is going to be set to 1900
-                d = datetime.strptime(
-                    info[1].contents[0].replace('&nbsp;', '').strip() + ' ' + current_year + ' ' + info[2].contents[
-                        0].replace('&nbsp;', '').strip(), '%a %b %d %Y %I:%M %p')
-                if not roll_year and d.month == 1 and datetime.now().month > 6:
-                    roll_year = True
-
-                if roll_year:
-                    d = d.replace(year=d.year + 1)
-
-                d = local_tz.localize(d).astimezone(utc)
-                games.append(Game(game_num, d, info[3].contents[0].replace('&nbsp;', '').strip(), away_team, home_team))
-
-        return games
-
-    def _get_text_content(self, soupnode):
-        if len(soupnode) > 1:
-            return ''.join([self._get_text_content(child) for child in soupnode])
-        else:
-            if type(soupnode) == bs.Tag:
-                return ''.join([self._get_text_content(content) for content in soupnode.contents])
-            else:
-                return soupnode
 
 
 def convert_date_time(date):
@@ -266,15 +196,20 @@ def main():
     fremonticeurl = config.get('Sharks Ice Fremont', 'url')
     fremonticeteams = config.get('Sharks Ice Fremont', 'teams')
 
-    ripper = ScheduleRipper()
+    ncwhl_url = config.get('NCWHL', 'url')
+    ncwhl_teams = config.get('NCWHL', 'teams')
 
     games = []
 
     if len(iceteams) > 0:
-        games.extend(ripper.ripSharksIceMainSchedule(iceurl, iceteams.split(',')))
+        games.extend(SharksIceParser.parse_main_schedule(iceurl, [team.strip() for team in iceteams.split(',')]))
 
     if len(fremonticeteams) > 0:
-        games.extend(ripper.ripSharksIceMainSchedule(fremonticeurl, fremonticeteams.split(',')))
+        games.extend(SharksIceParser.parse_main_schedule(fremonticeurl,
+                                                         [team.strip() for team in fremonticeteams.split(',')]))
+
+    if len(ncwhl_teams) > 0:
+        games.extend(NcwhlParser.rip_schedule(ncwhl_url, [team.strip() for team in ncwhl_teams.split(',')]))
 
     for game in sorted(games, key=lambda g: g.date):
         print game
@@ -314,6 +249,7 @@ def main():
                 print 'Invalid selection'
 
     manager.sync(games, cal)
+
 
 if __name__ == '__main__':
     main()
