@@ -21,10 +21,11 @@ local_tz = get_localzone()
 
 
 class Game:
-    def __init__(self, gameid, game_time, rink, away, home, event_id=None):
+    def __init__(self, gameid, game_time, rink, away, home, address, event_id=None):
         self.gameid = gameid
         self.date = game_time
         self.rink = rink
+        self.address = address
         self.away = away
         self.home = home
 
@@ -38,7 +39,7 @@ class Game:
 
     def __eq__(self, other):
         return (self.gameid == other.gameid and self.date == other.date and self.rink == other.rink and
-                self.away == other.away and self.home == other.home)
+                self.away == other.away and self.home == other.home and self.address == other.address)
 
     def __ne__(self, other):
         return not __eq__(self, other)
@@ -49,9 +50,9 @@ def convert_date_time(date):
 
 
 class CalendarManager:
-    def __init__(self, service, timezone='America/Los_Angeles'):
+    def __init__(self, service, reminder_minutes=45):
         self.service = service
-        self.timezone = timezone
+        self.reminder_minutes = reminder_minutes
 
     def get_calendars(self):
         page_token = None
@@ -132,8 +133,10 @@ class CalendarManager:
                 game_number = content[content.find('#') + 1:]
                 where = event['location']
                 sep = title.find('@')
+                sep2 = title.rfind(' at ')
                 away = title[:sep].strip()
-                home = title[sep + 1:].strip()
+                home = title[sep + 1:sep2].strip()
+                rink = title[sep2 + 4:].strip()
                 start = event['start']['dateTime']
                 if '+' in start:
                     plus = start.rfind('+')
@@ -142,7 +145,7 @@ class CalendarManager:
                     minus = start.rfind('-')
                     start = start[:minus]
                 game_time = local_tz.localize(datetime.strptime(start, '%Y-%m-%dT%H:%M:%S')).astimezone(utc)
-                new_game = Game(game_number, game_time, where, away, home, event)
+                new_game = Game(game_number, game_time, rink, away, home, where, event)
                 current_games[game_number] = new_game
 
             page_token = events.get('nextPageToken')
@@ -151,24 +154,34 @@ class CalendarManager:
 
         return current_games
 
+    # Credit to mattcaffeine for initial reminder and address code
     def __create_game(self, game, cal):
-        title_text = game.away + ' @ ' + game.home
+        title_text = game.away + ' @ ' + game.home + ' at ' + game.rink
         content_text = 'Game#' + game.gameid
         start_time = convert_date_time(game.date)
         end_time = convert_date_time(game.date + timedelta(hours=1, minutes=15))
 
         event = {
             'summary': title_text,
-            'location': game.rink,
+            'location': game.address,
             'description': content_text,
             'start': {
-                'dateTime': start_time,
-                'timeZone': self.timezone
+                'dateTime': start_time
             },
             'end': {
-                'dateTime': end_time,
-                'timeZone': self.timezone
+                'dateTime': end_time
             }
+        }
+
+        if self.reminder_minutes > 0:
+            event['reminders'] = {
+                'useDefault': 'false',
+                'overrides': [
+                    {
+                        'method': 'popup',
+                        'minutes': self.reminder_minutes
+            }
+                ]
         }
 
         created_event = self.service.events().insert(calendarId=cal, body=event).execute()
@@ -231,7 +244,7 @@ def main():
     http = credentials.authorize(http)
 
     service = discovery.build(serviceName='calendar', version='v3', http=http, developerKey='')
-    manager = CalendarManager(service)
+    manager = CalendarManager(service, config.getint('General', 'reminder_minutes'))
 
     cal = config.get('Google Calendar', 'calendarid')
     if len(cal) == 0:

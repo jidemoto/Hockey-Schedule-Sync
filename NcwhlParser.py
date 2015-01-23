@@ -7,6 +7,11 @@ from tzlocal import get_localzone
 
 utc = pytz.utc
 local_tz = get_localzone()
+rink_addresses = {
+    'Belmont': '815 Old County Road, Belmont, CA 94002',
+    'Ice Oasis': '3140 Bay Road, Redwood City, CA 94063',
+    'Fremont': '44388 Old Warm Springs Boulevard, Fremont, CA 94538'
+}
 
 
 def rip_schedule(page, teams):
@@ -32,11 +37,10 @@ def rip_schedule(page, teams):
                 dt = datetime.combine(datetime.strptime(d, '%d-%b-%y').date(),
                                       datetime.strptime(t, '%I:%M %p').time())
                 converted_dt = local_tz.localize(dt).astimezone(utc)
-                games.append(Game(num, converted_dt, rink, away, home))
+                games.append(Game(num, converted_dt, rink, away, home, rink_addresses[rink]))
 
     print 'Found', len(games), 'games for', teams
     return games
-
 def main():
     for game in rip_schedule('http://ncwhl.com/static/schedules/Winter201415FullSchedule.html', ['R5']):
         print game

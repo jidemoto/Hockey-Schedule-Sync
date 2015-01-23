@@ -8,6 +8,14 @@ import BeautifulSoup as bs
 
 utc = pytz.utc
 local_tz = get_localzone()
+rink_addresses = {
+    'San Jose North': '1500 South 10th Street, San Jose, CA 95112',
+    'San Jose South': '1500 South 10th Street, San Jose, CA 95112',
+    'San Jose East': '1500 South 10th Street, San Jose, CA 95112',
+    'San Jose Center': '1500 South 10th Street, San Jose, CA 95112',
+    'SAP Center': '525 West Santa Clara Street, San Jose, CA 95113',
+    'Fremont': '44388 Old Warm Springs Boulevard, Fremont, CA 94538'
+}
 
 
 def parse_main_schedule(page, teams):
@@ -64,7 +72,8 @@ def __parse_team_schedule(anchor):
                 d = d.replace(year=d.year + 1)
 
             d = local_tz.localize(d).astimezone(utc)
-            games.append(Game(game_num, d, info[3].contents[0].replace('&nbsp;', '').strip(), away_team, home_team))
+            rink = info[3].contents[0].replace('&nbsp;', '').strip()
+            games.append(Game(game_num, d, rink, away_team, home_team, rink_addresses[rink]))
 
     return games
 
