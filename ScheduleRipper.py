@@ -12,12 +12,11 @@ import argparse
 import httplib2
 from apiclient import discovery
 import pytz
-from tzlocal import get_localzone
+from pytz import timezone
 import NcwhlParser
 import SharksIceParser
 
 utc = pytz.utc
-local_tz = get_localzone()
 
 
 class Game:
@@ -34,7 +33,7 @@ class Game:
     def __str__(self):
         return 'Game %s at %s - %s. %s @ %s' % \
                (self.gameid,
-                self.date.astimezone(local_tz).strftime('%a %b %d, %Y %I:%M%p'),
+                self.date.strftime('%a %b %d, %Y %I:%M%p'),
                 self.rink, self.away, self.home)
 
     def __eq__(self, other):
@@ -119,6 +118,7 @@ class CalendarManager:
     def date_range_search(self, cal, start, end, text='Game#'):
         current_games = dict()
         page_token = None
+        calendar_timezone = timezone(self.get_cal_timezone(cal))
 
         while True:
             events = self.service.events().list(calendarId=cal,
@@ -144,7 +144,7 @@ class CalendarManager:
                 elif '-' in start:
                     minus = start.rfind('-')
                     start = start[:minus]
-                game_time = local_tz.localize(datetime.strptime(start, '%Y-%m-%dT%H:%M:%S')).astimezone(utc)
+                game_time = calendar_timezone.localize(datetime.strptime(start, '%Y-%m-%dT%H:%M:%S')).astimezone(utc)
                 new_game = Game(game_number, game_time, rink, away, home, where, event)
                 current_games[game_number] = new_game
 
@@ -153,6 +153,10 @@ class CalendarManager:
                 break
 
         return current_games
+
+    def get_cal_timezone(self, calendar_id):
+        calendar = self.service.calendars().get(calendarId=calendar_id).execute()
+        return calendar['timeZone']
 
     # Credit to mattcaffeine for initial reminder and address code
     def __create_game(self, game, cal):
@@ -180,9 +184,9 @@ class CalendarManager:
                     {
                         'method': 'popup',
                         'minutes': self.reminder_minutes
-            }
+                    }
                 ]
-        }
+            }
 
         created_event = self.service.events().insert(calendarId=cal, body=event).execute()
 

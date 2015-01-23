@@ -3,11 +3,12 @@ import re
 import urllib
 from BeautifulSoup import BeautifulSoup
 import pytz
-from tzlocal import get_localzone
+from pytz import timezone
 import BeautifulSoup as bs
 
 utc = pytz.utc
-local_tz = get_localzone()
+local_tz = timezone('America/Los_Angeles')
+
 rink_addresses = {
     'San Jose North': '1500 South 10th Street, San Jose, CA 95112',
     'San Jose South': '1500 South 10th Street, San Jose, CA 95112',

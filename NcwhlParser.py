@@ -3,10 +3,11 @@ from BeautifulSoup import BeautifulSoup
 import urllib
 
 import pytz
-from tzlocal import get_localzone
+from pytz import timezone
 
 utc = pytz.utc
-local_tz = get_localzone()
+local_tz = timezone('America/Los_Angeles')
+
 rink_addresses = {
     'Belmont': '815 Old County Road, Belmont, CA 94002',
     'Ice Oasis': '3140 Bay Road, Redwood City, CA 94063',
@@ -41,9 +42,3 @@ def rip_schedule(page, teams):
 
     print 'Found', len(games), 'games for', teams
     return games
-def main():
-    for game in rip_schedule('http://ncwhl.com/static/schedules/Winter201415FullSchedule.html', ['R5']):
-        print game
-
-if __name__ == '__main__':
-    main()
