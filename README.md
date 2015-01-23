@@ -1,14 +1,14 @@
 # Sharks Ice Schedule Sync Tool
 
-A quick and dirty sync tool that will pull in all the games scheduled for your hockey teams at Sharks Ice San Jose and
-Sharks Ice Fremont and add them to a Google calendar.
+A quick and dirty sync tool that will pull in all the games scheduled for your hockey teams at Sharks Ice San Jose,
+Sharks Ice Fremont, and the NCWHL and add them to a Google calendar.
 
 ## Dependencies / Setup
 
 Requires python 2.x and [pip](https://pypi.python.org/pypi/pip)
 
 Run the following command (may need to use sudo depending on your system).
-> pip install --upgrade BeautifulSoup google-api-python-client tzlocal pytz argparse
+> pip install --upgrade BeautifulSoup google-api-python-client pytz argparse
 
 Open the _config.cfg_ file and edit the teams property for your particular rink (comma separated, as they appear on the stat page)
 
@@ -26,6 +26,4 @@ usable for cron jobs)
 
 ## To do:
 
-- Refactor a bit to make it more readable.  Also pull the schedule connectors away from the rest of the code it make it easier to...
-- Add a connector the NCWHL schedule
 - Add a connector for Ice Oasis' Google Calendar
