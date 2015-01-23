@@ -7,6 +7,7 @@ from oauth2client.file import Storage
 from oauth2client import tools
 from oauth2client.client import flow_from_clientsecrets
 
+import os
 import argparse
 import httplib2
 from apiclient import discovery
@@ -186,7 +187,8 @@ class CalendarManager:
 
 
 def main():
-    config_file = 'config.cfg'
+    script_location = os.path.dirname(os.path.realpath(__file__))
+    config_file = os.path.join(script_location, 'config.cfg')
     config = ConfigParser.ConfigParser(allow_no_value=True)
     config.read(config_file)
 
@@ -214,10 +216,11 @@ def main():
     for game in sorted(games, key=lambda g: g.date):
         print game
 
-    flow = flow_from_clientsecrets(config.get('General', 'secrets_location'),
+    secrets_location = config.get('General', 'secrets_location')
+    flow = flow_from_clientsecrets(os.path.join(script_location, secrets_location),
                                    scope='https://www.googleapis.com/auth/calendar',
                                    redirect_uri='urn:ietf:wg:oauth:2.0:oob')
-    storage = Storage('credentials.dat')
+    storage = Storage(os.path.join(script_location, 'credentials.dat'))
     credentials = storage.get()
     if credentials is None or credentials.invalid:
         parser = argparse.ArgumentParser(parents=[tools.argparser])
