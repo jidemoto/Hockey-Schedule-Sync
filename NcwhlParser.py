@@ -38,9 +38,7 @@ def rip_schedule(page, teams):
                 dt = datetime.combine(datetime.strptime(d, '%d-%b-%y').date(),
                                       datetime.strptime(t, '%I:%M %p').time())
                 converted_dt = local_tz.localize(dt).astimezone(utc)
-                rink_address = ''
-                if rink in rink_addresses:
-                    rink_address = rink_address[rink]
+                rink_address = rink_addresses.get(rink, '')
                 games.append(Game(num, converted_dt, rink, away, home, rink_address))
 
     print 'Found', len(games), 'games for', teams

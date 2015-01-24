@@ -74,9 +74,7 @@ def __parse_team_schedule(anchor):
 
             d = local_tz.localize(d).astimezone(utc)
             rink = info[3].contents[0].replace('&nbsp;', '').strip()
-            rink_address = ''
-            if rink in rink_addresses:
-                rink_address = rink_address[rink]
+            rink_address = rink_addresses.get(rink, '')
             games.append(Game(game_num, d, rink, away_team, home_team, rink_address))
 
     return games
