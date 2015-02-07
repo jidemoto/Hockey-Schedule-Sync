@@ -1,8 +1,10 @@
 import unittest
 import NcwhlParser
 
+
 def dummy_open(url):
     return DummyUrl()
+
 
 class ScheduleParsesTestCase(unittest.TestCase):
     def runTest(self):

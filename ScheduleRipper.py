@@ -118,7 +118,7 @@ class CalendarManager:
     def date_range_search(self, cal, start, end, text='Game#'):
         current_games = dict()
         page_token = None
-        calendar_timezone = timezone(self.get_cal_timezone(cal))
+        cal_tz = timezone(self.get_cal_timezone(cal))
 
         while True:
             events = self.service.events().list(calendarId=cal,
@@ -127,26 +127,28 @@ class CalendarManager:
                                                 timeMin=convert_date_time(start),
                                                 timeMax=convert_date_time(end)).execute()
             for event in events['items']:
-                print '\t%s: %s (%s)' % (event['summary'], event['description'], event['start']['dateTime'])
-                title = event['summary']
-                content = event['description']
-                game_number = content[content.find('#') + 1:]
-                where = event['location']
-                sep = title.find('@')
-                sep2 = title.rfind(' at ')
-                away = title[:sep].strip()
-                home = title[sep + 1:sep2].strip()
-                rink = title[sep2 + 4:].strip()
-                start = event['start']['dateTime']
-                if '+' in start:
-                    plus = start.rfind('+')
-                    start = start[:plus]
-                elif '-' in start:
-                    minus = start.rfind('-')
-                    start = start[:minus]
-                game_time = calendar_timezone.localize(datetime.strptime(start, '%Y-%m-%dT%H:%M:%S')).astimezone(utc)
-                new_game = Game(game_number, game_time, rink, away, home, where, event)
-                current_games[game_number] = new_game
+                content = event.get('description')
+                if 'description' in event and content.startswith('Game#') and 'summary' in event and 'start' in event:
+                    start = event.get('start').get('dateTime')
+                    title = event.get('summary')
+                    print '\t%s: %s (%s)' % (title, content, start)
+                    where = event.get('location', '')
+                    game_number = content[content.find('#') + 1:]
+                    sep = title.find('@')
+                    sep2 = title.rfind(' at ')
+                    away = title[:sep].strip()
+                    home = title[sep + 1:sep2].strip()
+                    rink = title[sep2 + 4:].strip()
+
+                    if '+' in start:
+                        plus = start.rfind('+')
+                        start = start[:plus]
+                    elif '-' in start:
+                        minus = start.rfind('-')
+                        start = start[:minus]
+                    game_time = cal_tz.localize(datetime.strptime(start, '%Y-%m-%dT%H:%M:%S')).astimezone(utc)
+                    new_game = Game(game_number, game_time, rink, away, home, where, event)
+                    current_games[game_number] = new_game
 
             page_token = events.get('nextPageToken')
             if not page_token:
