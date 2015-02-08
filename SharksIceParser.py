@@ -4,7 +4,7 @@ import urllib
 from BeautifulSoup import BeautifulSoup
 import pytz
 from pytz import timezone
-import BeautifulSoup as bs
+from ParserUtilities import get_text_content
 
 utc = pytz.utc
 local_tz = timezone('America/Los_Angeles')
@@ -50,17 +50,15 @@ def __parse_team_schedule(anchor):
         info = game.findAll('td')
         if len(info) > 0:
             # print info[0]
-            game_num = info[0].contents[0]
-            if type(game_num) == bs.Tag and game_num.name == 'a':
-                game_num = game_num.contents[0]
+            game_num = get_text_content(info[0])
 
             starpos = game_num.find('*')
             if starpos >= 0:
                 continue  # This will skip the processing of games that have already occured
             # gameNum = gameNum[:starpos]
 
-            home_team = ''.join([__get_text_content(x) for x in info[8].contents]).replace('&nbsp;', '').strip()
-            away_team = ''.join([__get_text_content(x) for x in info[6].contents]).replace('&nbsp;', '').strip()
+            home_team = get_text_content(info[8])
+            away_team = get_text_content(info[6])
 
             # This date is going to be set to 1900
             d = datetime.strptime(
@@ -78,13 +76,3 @@ def __parse_team_schedule(anchor):
             games.append(Game(game_num, d, rink, away_team, home_team, rink_address))
 
     return games
-
-
-def __get_text_content(soupnode):
-    if len(soupnode) > 1:
-        return ''.join([__get_text_content(child) for child in soupnode])
-    else:
-        if type(soupnode) == bs.Tag:
-            return ''.join([__get_text_content(content) for content in soupnode.contents])
-        else:
-            return soupnode

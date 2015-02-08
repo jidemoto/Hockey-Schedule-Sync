@@ -1,6 +1,7 @@
 from datetime import datetime
 from BeautifulSoup import BeautifulSoup
 import urllib
+from ParserUtilities import get_text_content
 
 import pytz
 from pytz import timezone
@@ -27,12 +28,12 @@ def rip_schedule(page, teams):
     for row in rows:
         cells = row.findAll('td')
         if len(cells) > 8 and len(cells[7]) > 0 and len(cells[8]) > 0:
-            home = cells[7].contents[0]
-            away = cells[8].contents[0]
-            rink = cells[5].contents[0]
-            d = cells[3].contents[0]
-            t = cells[4].contents[0]
-            num = cells[1].contents[0]
+            home = get_text_content(cells[7])
+            away = get_text_content(cells[8])
+            rink = get_text_content(cells[5])
+            d = get_text_content(cells[3])
+            t = get_text_content(cells[4])
+            num = get_text_content(cells[1])
 
             if home in teams or away in teams:
                 dt = datetime.combine(datetime.strptime(d, '%d-%b-%y').date(),
