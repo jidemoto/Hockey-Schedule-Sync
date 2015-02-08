@@ -5,6 +5,7 @@ from BeautifulSoup import BeautifulSoup
 import pytz
 from pytz import timezone
 import BeautifulSoup as bs
+import hashlib
 
 utc = pytz.utc
 local_tz = timezone('America/Los_Angeles')
@@ -46,13 +47,21 @@ def __parse_league_schedule(anchor, teams):
             home_team = __get_text_content(info[3]).strip()
             away_team = __get_text_content(info[4]).strip()
 
-            if team_matcher.match(home_team) or team_matcher.match(away_team):
+            # Figure out which team we're matching against and skip if neither team is one we're looking for
+            matched = team_matcher.match(home_team)
+            if not matched:
+                matched = team_matcher.match(away_team)
+            if matched:
+                matched_team = matched.group(0)
+                # Generate a "unique" ID that we can use against existing entries for the game id
+                # This will help us differentiate between games for two different teams
+                game_number = hashlib.md5(matched_team + str(current_game_number)).hexdigest()
+
                 parsed_date = datetime.strptime(__get_text_content(info[1]).strip(), '%m/%d/%Y').date()
                 parsed_time = datetime.strptime(__get_text_content(info[2]).strip(), '%I:%M%p').time()
                 d = datetime.combine(parsed_date, parsed_time)
-
                 d = local_tz.localize(d).astimezone(utc)
-                games.append(Game(str(current_game_number), d, 'Ice Angeles', away_team, home_team,
+                games.append(Game(game_number, d, 'Ice Angeles', away_team, home_team,
                                   '23770 Western Ave, Harbor City, California'))
                 current_game_number += 1
 
@@ -67,4 +76,3 @@ def __get_text_content(soupnode):
             return ''.join([__get_text_content(content) for content in soupnode.contents])
         else:
             return soupnode
-        
