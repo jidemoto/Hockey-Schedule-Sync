@@ -67,8 +67,4 @@ def __get_text_content(soupnode):
             return ''.join([__get_text_content(content) for content in soupnode.contents])
         else:
             return soupnode
-
-
-if __name__ == '__main__':
-    for game in parse_main_schedule('http://www.iceangeles.com/wp/schedule/', ['Sharknado', 'Orange Face Killers']):
-        print game
+        
