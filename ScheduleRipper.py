@@ -15,6 +15,7 @@ import pytz
 from pytz import timezone
 import NcwhlParser
 import SharksIceParser
+import IceAngelesParser
 
 utc = pytz.utc
 
@@ -205,32 +206,44 @@ class CalendarManager:
         self.service.events().delete(calendarId=cal, eventId=game.event_id['id']).execute()
 
 
+def __get_games(config):
+    games = []
+    if config.has_section('Sharks Ice San Jose'):
+        iceurl = config.get('Sharks Ice San Jose', 'url')
+        iceteams = config.get('Sharks Ice San Jose', 'teams')
+        if len(iceteams) > 0:
+            games.extend(SharksIceParser.parse_main_schedule(iceurl, [team.strip() for team in iceteams.split(',')]))
+
+    if config.has_section('Sharks Ice Fremont'):
+        fremonticeurl = config.get('Sharks Ice Fremont', 'url')
+        fremonticeteams = config.get('Sharks Ice Fremont', 'teams')
+        if len(fremonticeteams) > 0:
+            games.extend(SharksIceParser.parse_main_schedule(fremonticeurl,
+                                                             [team.strip() for team in fremonticeteams.split(',')]))
+
+    if config.has_section('NCWHL'):
+        ncwhl_url = config.get('NCWHL', 'url')
+        ncwhl_teams = config.get('NCWHL', 'teams')
+        if len(ncwhl_teams) > 0:
+            games.extend(NcwhlParser.rip_schedule(ncwhl_url, [team.strip() for team in ncwhl_teams.split(',')]))
+
+    if config.has_section('Ice Angeles'):
+        ice_angeles_url = config.get('Ice Angeles', 'url')
+        ice_angeles_teams = config.get('Ice Angeles', 'teams')
+        if len(ice_angeles_teams) > 0:
+            games.extend(IceAngelesParser.parse_main_schedule(ice_angeles_url,
+                                                              [team.strip() for team in ice_angeles_teams.split(',')]))
+
+    return games
+
+
 def main():
     script_location = os.path.dirname(os.path.realpath(__file__))
     config_file = os.path.join(script_location, 'config.cfg')
     config = ConfigParser.ConfigParser(allow_no_value=True)
     config.read(config_file)
 
-    iceurl = config.get('Sharks Ice San Jose', 'url')
-    iceteams = config.get('Sharks Ice San Jose', 'teams')
-
-    fremonticeurl = config.get('Sharks Ice Fremont', 'url')
-    fremonticeteams = config.get('Sharks Ice Fremont', 'teams')
-
-    ncwhl_url = config.get('NCWHL', 'url')
-    ncwhl_teams = config.get('NCWHL', 'teams')
-
-    games = []
-
-    if len(iceteams) > 0:
-        games.extend(SharksIceParser.parse_main_schedule(iceurl, [team.strip() for team in iceteams.split(',')]))
-
-    if len(fremonticeteams) > 0:
-        games.extend(SharksIceParser.parse_main_schedule(fremonticeurl,
-                                                         [team.strip() for team in fremonticeteams.split(',')]))
-
-    if len(ncwhl_teams) > 0:
-        games.extend(NcwhlParser.rip_schedule(ncwhl_url, [team.strip() for team in ncwhl_teams.split(',')]))
+    games = __get_games(config)
 
     for game in sorted(games, key=lambda g: g.date):
         print game
