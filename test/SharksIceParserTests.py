@@ -10,6 +10,8 @@ def dummy_open(url):
         return DummyUrl(team_html)
     elif url == 'http://stats.liahl.org/display-schedule.php?team=2046&season=30&tlev=0&tseq=0&league=1':
         return DummyUrl(team_rollover_html)
+    elif url == 'http://stats.liahl.org/display-schedule.php?team=881&season=30&tlev=0&tseq=0&league=1':
+        return DummyUrl(team_noon_html)
     else:
         raise RuntimeError('The URL requested was not expected')
 
@@ -53,6 +55,26 @@ class SharksIceParserTestYearRollover(unittest.TestCase):
         self.assertEqual(games[1].date.day, 5)
         self.assertEqual(games[1].date.hour, 7)
         self.assertEqual(games[1].date.minute, 15)
+
+
+class SharksIceParserTestNoonTime(unittest.TestCase):
+    def runTest(self):
+        SharksIceParser.urllib.urlopen = dummy_open
+        SharksIceParser.datetime = TestDateTime
+        # datetime.datetime = TestDateTime
+        games = SharksIceParser.parse_main_schedule('http://stats.liahl.org/display-stats.php?league=1',
+                                                    ['Charlie Browns'])
+        self.assertEqual(len(games), 2)
+        self.assertEqual(games[0].date.year, 2010)
+        self.assertEqual(games[0].date.day, 28)
+        self.assertEqual(games[0].date.month, 12)
+        self.assertEqual(games[0].date.hour, 1)
+        self.assertEqual(games[0].date.minute, 15)
+        self.assertEqual(games[1].date.year, 2011)
+        self.assertEqual(games[1].date.month, 1)
+        self.assertEqual(games[1].date.day, 4)
+        self.assertEqual(games[1].date.hour, 20)
+        self.assertEqual(games[1].date.minute, 00)
 
 
 class TestDateTime(datetime.datetime):
@@ -671,6 +693,131 @@ team_rollover_html = '''<html>
 			<td>127520</td>
 			<td>&nbsp;Sun Jan 4&nbsp;</td>
 			<td>&nbsp;11:15 PM&nbsp;</td>
+			<td>&nbsp;San Jose Center &nbsp;</td>
+			<td>&nbsp;SIAHL@SJ&nbsp;</td>
+			<td>&nbsp;Senior DDDD&nbsp;</td>
+			<td>&nbsp;<b>Time Lords  </b>&nbsp;</td>
+			<td>&nbsp;<b>6</b>&nbsp;</td>
+			<td>&nbsp;Natural Disasters  &nbsp;</td>
+			<td>&nbsp;0&nbsp;</td>
+			<td>&nbsp;Regular 11&nbsp;</td>
+			<td>
+				<a href="generate-scorecard.php?game_id=127520">Scoresheet</a>
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+</center>
+<center>Download Schedule:&nbsp;<a href="team-cal.php?team=2046&tlev=0&tseq=0&season=30&format=iCal">iCal</a>&nbsp;<a href="javascript:outlook_confirm('team-cal.php?team=2046&tlev=0&tseq=0&season=30&format=outlook')">Outlook</a>&nbsp;<a href="export-schedule-download.php?league=1&level=0&team=2046&season=30">Excel</a>&nbsp;<a href="webcal://stats.siahl.org/team-cal.php?team=2046&tlev=0&tseq=0&season=30&format=iCal">WebCal</a>&nbsp;</center>
+<br>
+<br>
+
+    <br>
+    <center>&copy; Time to Score, Inc</center>
+</body>
+
+
+
+
+
+
+
+
+
+
+
+</html>'''
+
+team_noon_html = '''<html>
+<style type="text/css">
+	//<!--
+	body {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+	th   {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt;
+		font-weight: bold; background-color: #D3DCE3;}
+		td   {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt;}
+		form   {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+		h1b   {  font-family: Verdana, Arial, Helvetica, sans-serif;
+			font-size: 16pt; font-weight: bold}
+			A:link    {  font-family: Arial, Helvetica, sans-serif;
+				font-size: 10pt; text-decoration: none; color: blue}
+				A:visited {  font-family: Arial, Helvetica, sans-serif;
+					font-size: 10pt; text-decoration: none; color: blue}
+					A:hover   {  font-family: Arial, Helvetica, sans-serif;
+						font-size: 10pt; text-decoration: underline; color: red}
+						A:link.nav {  font-family: Verdana, Arial, Helvetica, sans-serif;
+							color: #000000}
+							A:visited.nav {  font-family: Verdana, Arial, Helvetica, sans-serif;
+								color: #000000}
+								A:hover.nav {  font-family: Verdana, Arial, Helvetica, sans-serif; color: red;}
+								.nav {  font-family: Verdana, Arial, Helvetica, sans-serif; color: #000000}
+
+								//-->
+							</style>
+
+							<body text="#000000" vlink="#1111aa" link="#0000ff" bgcolor="ffffff">
+								<SCRIPT TYPE="text/javascript">
+									<!--
+
+									function outlook_confirm(link)
+									{
+
+										var confirmation = confirm("For Outlook, please save the file and then use the Import function on the File Menu to load the events, otherwise only the first event will be loaded\n");
+										if (confirmation) { document.location = link; }
+
+									}
+
+  //-->
+</SCRIPT>
+
+
+
+
+
+
+
+<br>
+<br>
+<center>
+	<table border=0>
+		<TR>
+			<th colspan=13>Game Results</th>
+		</tr>
+		<tr>
+			<th>Game</th>
+			<th>Date</th>
+			<th>Time</th>
+			<th>Rink</th>
+			<th>League</th>
+			<th>Level</th>
+			<th>Away</th>
+			<th>Goals</th>
+			<th>Home</th>
+			<th>Goals</th>
+			<th>Type</th>
+			<th>Scoresheet</th>
+			<th>Box Score</th>
+		</tr>
+		<tr bgcolor="#DDDDDD">
+			<td>127554</td>
+			<td>&nbsp;Sat Dec 27&nbsp;</td>
+			<td>&nbsp;5:15 PM&nbsp;</td>
+			<td>&nbsp;San Jose East &nbsp;</td>
+			<td>&nbsp;SIAHL@SJ&nbsp;</td>
+			<td>&nbsp;Senior DDDD&nbsp;</td>
+			<td>&nbsp;<b>Time Lords  </b>&nbsp;</td>
+			<td>&nbsp;<b>6</b>&nbsp;</td>
+			<td>&nbsp;K-Wings  &nbsp;</td>
+			<td>&nbsp;1&nbsp;</td>
+			<td>&nbsp;Regular 10&nbsp;</td>
+			<td>
+				<a href="generate-scorecard.php?game_id=127554">Scoresheet</a>
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr bgcolor="#CCCCcc">
+			<td>127520</td>
+			<td>&nbsp;Sun Jan 4&nbsp;</td>
+			<td>&nbsp;12 Noon&nbsp;</td>
 			<td>&nbsp;San Jose Center &nbsp;</td>
 			<td>&nbsp;SIAHL@SJ&nbsp;</td>
 			<td>&nbsp;Senior DDDD&nbsp;</td>

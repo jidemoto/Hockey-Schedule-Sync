@@ -63,7 +63,7 @@ def __parse_team_schedule(anchor):
             # This date is going to be set to 1900
             d = datetime.strptime(
                 info[1].contents[0].replace('&nbsp;', '').strip() + ' ' + current_year + ' ' + info[2].contents[
-                    0].replace('&nbsp;', '').strip(), '%a %b %d %Y %I:%M %p')
+                    0].replace('&nbsp;', '').replace(' Noon', ':00 PM').strip(), '%a %b %d %Y %I:%M %p')
             if not roll_year and d.month == 1 and datetime.now().month > 6:
                 roll_year = True
 
