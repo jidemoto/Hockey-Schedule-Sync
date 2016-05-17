@@ -10,7 +10,8 @@ utc = pytz.utc
 local_tz = timezone('America/Los_Angeles')
 
 rink_addresses = {
-    'Belmont': '815 Old County Road, Belmont, CA 94002',
+    'Oakland': '519 18th St, Oakland, CA 94612',
+    'Vallco': '10123 N Wolfe Rd, Cupertino, CA 95014',
     'Ice Oasis': '3140 Bay Road, Redwood City, CA 94063',
     'Fremont': '44388 Old Warm Springs Boulevard, Fremont, CA 94538'
 }

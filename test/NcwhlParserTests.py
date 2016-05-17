@@ -18,10 +18,10 @@ class ScheduleParsesTestCase(unittest.TestCase):
 
         games = NcwhlParser.rip_schedule("ScheduleURL", ['R1'])
         self.assertEqual(len(games), 1, "Wrong number of games parsed")
-        self.assertEqual(games[0].rink, 'Belmont')
+        self.assertEqual(games[0].rink, 'Vallco')
         self.assertEqual(games[0].home, 'R1')
         self.assertEqual(games[0].away, 'R4')
-        self.assertEqual(games[0].address, '815 Old County Road, Belmont, CA 94002')
+        self.assertEqual(games[0].address, '10123 N Wolfe Rd, Cupertino, CA 95014')
 
         games = NcwhlParser.rip_schedule("ScheduleURL", ['R2'])
         self.assertEqual(len(games), 1, "Wrong number of games parsed")
@@ -29,6 +29,13 @@ class ScheduleParsesTestCase(unittest.TestCase):
         self.assertEqual(games[0].home, 'R2')
         self.assertEqual(games[0].away, 'R5')
         self.assertEqual(games[0].address, '44388 Old Warm Springs Boulevard, Fremont, CA 94538')
+
+        games = NcwhlParser.rip_schedule("ScheduleURL", ['M1'])
+        self.assertEqual(len(games), 1, "Wrong number of games parsed")
+        self.assertEqual(games[0].rink, 'Oakland')
+        self.assertEqual(games[0].home, 'M1')
+        self.assertEqual(games[0].away, 'M2')
+        self.assertEqual(games[0].address, '519 18th St, Oakland, CA 94612')
 
 
 class DummyUrl:
@@ -84,7 +91,7 @@ class DummyUrl:
   <td class=xl70 style='border-top:none;border-left:none'>Tue</td>
   <td class=xl70 style='border-top:none;border-left:none'>2-Sep-14</td>
   <td class=xl71 style='border-top:none;border-left:none'>8:15 PM</td>
-  <td class=xl72 style='border-top:none;border-left:none'>Belmont</td>
+  <td class=xl72 style='border-top:none;border-left:none'>Vallco</td>
   <td class=xl73 style='border-top:none;border-left:none;font-size:14.0pt;
   color:black;font-weight:400;text-decoration:none;text-underline-style:none;
   text-line-through:none;font-family:Calibri;border-top:1.0pt solid windowtext;
@@ -135,7 +142,7 @@ class DummyUrl:
   <td class=xl76 style='border-top:none;border-left:none'>Sat</td>
   <td class=xl76 style='border-top:none;border-left:none'>20-Sep-14</td>
   <td class=xl77 style='border-top:none;border-left:none'>7:30 PM</td>
-  <td class=xl78 style='border-top:none;border-left:none'>Belmont</td>
+  <td class=xl78 style='border-top:none;border-left:none'>Vallco</td>
   <td class=xl81 style='border-top:none;border-left:none;font-size:14.0pt;
   color:black;font-weight:400;text-decoration:none;text-underline-style:none;
   text-line-through:none;font-family:Calibri;border-top:.5pt hairline windowtext;
@@ -151,7 +158,7 @@ class DummyUrl:
   <td class=xl76 style='border-top:none;border-left:none'>Sat</td>
   <td class=xl76 style='border-top:none;border-left:none'>20-Sep-14</td>
   <td class=xl77 style='border-top:none;border-left:none'>6:45 PM</td>
-  <td class=xl78 style='border-top:none;border-left:none'>Belmont</td>
+  <td class=xl78 style='border-top:none;border-left:none'>Oakland</td>
   <td class=xl81 style='border-top:none;border-left:none;font-size:14.0pt;
   color:black;font-weight:400;text-decoration:none;text-underline-style:none;
   text-line-through:none;font-family:Calibri;border-top:.5pt hairline windowtext;
