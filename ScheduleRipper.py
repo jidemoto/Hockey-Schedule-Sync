@@ -129,9 +129,9 @@ class CalendarManager:
                                                 timeMax=convert_date_time(end)).execute()
             for event in events['items']:
                 content = event.get('description')
-                if 'description' in event and content.startswith('Game#') and 'summary' in event and 'start' in event:
+                title = event.get('summary')
+                if content and content.startswith('Game#') and title and 'start' in event:
                     start = event.get('start').get('dateTime')
-                    title = event.get('summary')
                     print '\t%s: %s (%s)' % (title, content, start)
                     where = event.get('location', '')
                     game_number = content[content.find('#') + 1:]
