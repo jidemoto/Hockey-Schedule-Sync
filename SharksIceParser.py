@@ -54,7 +54,7 @@ def __parse_team_schedule(anchor):
 
             starpos = game_num.find('*')
             if starpos >= 0:
-                continue  # This will skip the processing of games that have already occured
+                continue  # This will skip the processing of games that have already occurred
             # gameNum = gameNum[:starpos]
 
             home_team = get_text_content(info[8])
