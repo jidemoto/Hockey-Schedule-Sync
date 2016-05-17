@@ -8,7 +8,7 @@ Sharks Ice Fremont, and the NCWHL and add them to a Google calendar.
 Requires python 2.x and [pip](https://pypi.python.org/pypi/pip)
 
 Run the following command (may need to use sudo depending on your system).
-> pip install --upgrade BeautifulSoup google-api-python-client pytz argparse
+> pip install -r requirements.txt
 
 Open the _config.cfg_ file and edit the teams property for your particular rink (comma separated, as they appear on the stat page)
 
