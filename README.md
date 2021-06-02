@@ -14,11 +14,11 @@ Open the _config.cfg_ file and edit the teams property for your particular rink 
 
 ## Running
 
-You'll need to obtain client credentials for the app -- [follow the instructions provided by Google](https://developers.google.com/api-client-library/python/auth/installed-app#creatingcred)
-and put the credentials (renamed to client_secret.json) in the root of the project
+You'll need to obtain client credentials for the app -- [follow the instructions provided by Google](https://github.com/googleapis/google-api-python-client/blob/master/docs/oauth-installed.md#creating-application-credentials)
+and put the credentials (renamed to client_secret.json) in the root of the project.  Account access and app configuration has moved over to Google Cloud, so the process is slightly more complicated than it used to be.  Don't forget to configure your oauth consent screen to allow the `https://www.googleapis.com/auth/calendar` scope (scope reduction is an open TODO).
 
 Then just run
-> python ScheduleRipper.py
+> python ScheduleRipper.py --noauth_local_webserver
 
 The first run will prompt you for authorization to your google account and ask which calendar you'd like to sync the
 events to.  Every run afterwards will use the stored credentials and settings to run without intervention (making it
