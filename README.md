@@ -3,6 +3,9 @@
 A quick and dirty sync tool that will pull in all the games scheduled for your hockey teams at Sharks Ice San Jose,
 Sharks Ice Fremont, and the NCWHL and add them to a Google calendar.
 
+> [!WARNING]  
+> This project has been archived and won't be receiving updates.
+
 ## Dependencies / Setup
 
 Requires python 2.x and [pip](https://pypi.python.org/pypi/pip)
